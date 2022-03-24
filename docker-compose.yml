@@ -1,0 +1,56 @@
+version: '3.4'
+
+# This Guideline will show you how to config env
+# https://medium.com/better-programming/using-variables-in-docker-compose-265a604c2006
+
+services:
+  app:
+    image: resful-template
+    build:
+      context: .
+      target: production
+    env_file: .env
+    environment:
+      APP_PORT: $APP_PORT
+      NODE_ENV: $NODE_ENV
+      DB_USERNAME: $DB_USERNAME
+      DB_PASSWORD: $DB_PASSWORD
+      DB_DATABASE: $DB_DATABASE
+      DB_HOST: $DB_HOST
+    ports:
+      - 3000:$APP_PORT
+    volumes:
+      - prod_dep:/prod_dep/node_modules
+      - dev_dep:/builder/app/node_modules
+      - yarn_cache:/usr/local/share/.cache/yarn
+    command: yarn run start
+    networks:
+      - nw_template_rest
+    depends_on:
+      - db
+    # - nginx
+    # - redis
+
+  db:
+    build: ./docker/mysql
+    image: restful-db
+    environment:
+      MYSQL_ROOT_PASSWORD: admin@123
+      MYSQL_DATABASE: $DB_DATABASE
+      MYSQL_USER: $DB_USERNAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+    ports:
+      - 3306:3306
+    networks:
+      - nw_template_rest
+    # volumes:
+    #   - ./mysql:/var/lib/mysql
+
+networks:
+  nw_template_rest:
+    driver: bridge
+
+volumes:
+  yarn_cache:
+  dev_dep:
+  prod_dep:

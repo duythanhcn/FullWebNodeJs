@@ -1,0 +1,51 @@
+version: '3.7'
+
+# This Guideline will show you how to config env
+# https://medium.com/better-programming/using-variables-in-docker-compose-265a604c2006
+
+services:
+  app:
+    image: restful-template-local
+    build:
+      context: .
+
+      # Just build image `builder`. For detail, please see file `./Dockerfile`
+      target: builder
+    environment:
+      DB_USER: $DB_USERNAME
+      DB_PASSWORD: $DB_PASSWORD
+      NODE_ENV: $NODE_ENV
+      DB_DBNAME: $DB_DATABASE
+      DB_HOST: db
+    ports:
+      - 3000:3000
+    volumes:
+      # Share directory `src` to container. This help you can auto reload server if any file in
+      # directory change.
+      - ./src:/builder/app/src/
+      # Create volume to cache directory module. This useful for help build image fast more.
+      - /builder/app/node_modules/
+    # Start source with nodemon. For detail, read file package.json.
+    command: yarn run start:dev
+    networks:
+      - nw_template_rest
+    depends_on:
+      - db
+
+  db:
+    build: ./docker/mysql/
+    image: restful-mysql-local
+    environment:
+      MYSQL_ROOT_PASSWORD: admin@123
+      MYSQL_DATABASE: $DB_DATABASE
+      MYSQL_USER: $DB_USERNAME
+      MYSQL_PASSWORD: $DB_PASSWORD
+    ports:
+      - 3306:3306
+    networks:
+      - nw_template_rest
+    # volumes:
+    #   - ./mysql:/var/lib/mysql
+networks:
+  nw_template_rest:
+    driver: bridge
